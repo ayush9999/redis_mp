@@ -1,0 +1,4 @@
+---
+redis_port: 8879
+redis_new_port: 8879
+redis_password: secret

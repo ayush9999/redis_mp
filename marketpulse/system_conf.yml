@@ -1,0 +1,31 @@
+---
+
+- name: setup firewall
+  shell: yum -y install firewalld
+
+- name: enabling firewall
+  shell: systemctl enable firewalld
+
+#- name: rebooting
+#  shell: reboot
+
+- name: status firewall
+  shell: firewall-cmd --state
+
+- name: opening port 22
+  shell: firewall-cmd --permanent --add-port=22/tcp
+
+- name: calling ulimit scipt
+  shell: ./ulimit.sh 
+
+- name: installing curl
+  shell: yum -y install curl
+
+- name: disabling bash hstory
+  shell: set +o history
+
+- name: conntract max value
+  shell: ./contract.sh
+
+
+ 
