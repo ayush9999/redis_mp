@@ -1,0 +1,47 @@
+---
+
+- name: check if redis is already intalled
+  stat:
+    path: /usr/bin/redis-server
+  register: redis_exists
+
+- name: uninstall redis
+  yum:
+    name: redis
+    state: absent
+  when: redis_exists.stat.exists
+
+- name: install epel 
+  yum:
+    name: epel-release
+    state: latest
+
+- name: install redis 
+  yum:
+    name: redis
+    state: latest
+
+- name: Template redis conf 
+  template:
+    src: templates/redis.conf.j2 
+    dest: /etc/redis/redis.conf
+    owner: redis
+    group: redis
+
+- name: Start service redis
+  service:
+    name: redis
+    state: started
+
+- name: Enable redis service
+  service:
+    name: redis
+    enabled: yes
+
+- name: reg service
+  shell:  systemctl status redis.service
+  register: redis_services_state
+
+- name: Debug
+  debug:
+    var: redis_services_state

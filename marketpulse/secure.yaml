@@ -99,11 +99,17 @@
     path: '/etc/logrotate.d/syslog'
     state: absent
 
+- name: install utility 
+  yum:
+    name: sysstat
+    state: latest
+
 - name: Run system activity accounting tool every minute
   replace:
     path: '/etc/cron.d/sysstat'
     regexp: '# Run system activity accounting tool every 10 minutes'
     replace: '# Run system activity accounting tool every minute'
+  ignore_errors: true
 
 - name: Capture SAR every minute
   replace:
