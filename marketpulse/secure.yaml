@@ -1,0 +1,125 @@
+---
+
+- name: "Stop and disable services"
+  service:
+    name: "{{ item }}"
+    state: stopped
+    enabled: no
+  changed_when: false
+  with_items:
+    - ip6tables
+    - iptables
+    - iscsi
+    - iscsid
+    - netfs
+    - postfix
+    - mdmonitor
+    - blk-availability
+    - cgconfig
+    - cgred 
+    - haldaemon
+    - mdmonitor    
+    - messagebus
+    - netconsole
+    - netfs   
+    - rdisc
+    - restorecond
+    - saslauthd
+    - smartd
+    - snmptrapd
+    - udev-post
+  ignore_errors: yes
+
+
+- name: Enabling Netfs on major release 6
+  service:
+    name: "{{ item }}"
+    state: started
+    enabled: yes
+  when: ansible_distribution_major_version == '6'
+  with_items:
+    - netfs
+
+- name: calling ulimit scipt for setting nofile hard and soft
+  shell: ./ulimit.sh 
+
+#secure network
+    
+- name: Disable Interface usage of IPv6
+  lineinfile:
+    path: '/etc/sysconfig/network'
+    line: 'NETWORKING_IPV6=no'
+    backup: yes
+
+- name: Disable Interface usage of IPv6
+  lineinfile:
+    path: '/etc/sysconfig/network'
+    line: 'IPV6INIT=no'
+    backup: yes
+
+
+- name: Set SELINUX disabled
+  lineinfile:
+    dest: /etc/selinux/config
+    regexp: '^SELINUX='
+    line: 'SELINUX=disabled'
+    backup: yes
+
+- name: Disable Control-Alt-Delete restart on Major version 6
+  replace:
+    dest: /etc/init/control-alt-delete.conf
+    regexp: '^exec \/sbin\/shutdown -r now "Control-Alt-Delete pressed"'
+    replace: '# exec /sbin/shutdown -r now "Control-Alt-Delete pressed"'
+    backup: yes
+  when: ansible_distribution_major_version == '6'
+
+- name: Disable Control-Alt-Delete restart on Major version 7
+  file:
+    src: '/dev/null'
+    dest: '/etc/systemd/system/ctrl-alt-del.target'
+    state: link
+  when: ansible_distribution_major_version == '7'  
+
+- name: Set default run level 3
+  lineinfile:
+    dest: /etc/inittab
+    regexp: '^id:'
+    line: 'id:3:initdefault:'
+    backup: yes
+
+- name: Compress rotated log file
+  replace: 
+    path: /etc/logrotate.conf
+    regexp: '^#\s?compress'
+    replace: 'compress'
+    backup: yes
+
+- name: Remove /etc/logrotate.d/syslog
+  file:
+    path: '/etc/logrotate.d/syslog'
+    state: absent
+
+- name: Run system activity accounting tool every minute
+  replace:
+    path: '/etc/cron.d/sysstat'
+    regexp: '# Run system activity accounting tool every 10 minutes'
+    replace: '# Run system activity accounting tool every minute'
+
+- name: Capture SAR every minute
+  replace:
+    path: '/etc/cron.d/sysstat'
+    regexp: '^\*.*root\s\/usr\/lib64\/sa\/sa1\s(-S\sDISK\s)?1\s1'
+    replace: '* * * * * root /usr/lib64/sa/sa1 1 1'
+    backup: yes
+
+- name: Ensure gpgcheck is globally activated
+  replace:
+    path: /etc/yum.conf
+    regexp: '^gpgcheck=.*'
+    replace: 'gpgcheck=1'
+    backup: yes
+
+- name: install curl 
+  yum:
+    name: curl
+    state: latest

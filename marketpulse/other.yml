@@ -1,0 +1,33 @@
+---
+
+- name: install curl 
+  yum:
+    name: curl
+    state: latest
+
+- name: install curl 
+  yum:
+    name: firewalld
+    state: latest
+
+- name: Enable service httpd, and not touch the state
+  service:
+    name: firewalld
+    enabled: yes
+
+- name: status firewall
+  shell: firewall-cmd --state
+  register: firewall_state
+
+- name: check firewall status
+  debug:
+    var: firewall_state
+
+- name: disabling bash hstory
+  shell: set +o history
+
+- name: opening port 22
+  shell: firewall-cmd --permanent --add-port=22/tcp
+
+- name: conntract max value
+  shell: ./contract.sh
